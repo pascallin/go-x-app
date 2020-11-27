@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"errors"
 	"fmt"
 	"image"
 	"io/ioutil"
@@ -18,33 +19,49 @@ import (
 )
 
 type InsertOptions struct {
-	ExcelFilePath string
+	ExcelFile string
 	SheetName string
 	ImageDir string
 	KeyColumn string
 }
 
 func Insert(ops *InsertOptions) error {
-	xlsx, err := excelize.OpenFile(ops.ExcelFilePath)
+	fmt.Println(ops)
+
+	xlsx, err := excelize.OpenFile(ops.ExcelFile)
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	//imagesRecords := scanImages(ops.ImageDir)
 
 	rows, err := xlsx.GetRows(ops.SheetName)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	headers := rows[0]
+	index := SliceIndex(len(headers), func(i int) bool { return headers[i] == ops.KeyColumn })
+	if index == -1 {
+		return errors.New("could not found key")
+	}
+	axis := toChar(index)
+	imageAxis := toChar(len(headers))
+
 	for i, _ := range rows {
-		cell, err := xlsx.GetCellValue(ops.SheetName, ops.KeyColumn + strconv.Itoa(i+1))
+		cell, err := xlsx.GetCellValue(ops.SheetName, axis + strconv.Itoa(i+1))
 		if err != nil {
 			return err
 		}
 		imagePath := findImageByKey(ops.ImageDir, cell)
 		// Insert a picture.
 		// NOTE: autofit not working
-		err = xlsx.AddPicture(ops.SheetName, "C2", imagePath , `{"autofit": true}`)
-		if err != nil {
-			fmt.Println(err)
-			return err
+		if imagePath != "" {
+			err = xlsx.AddPicture(ops.SheetName, imageAxis + strconv.Itoa(len(headers)), imagePath , `{"autofit": true}`)
+			if err != nil {
+				fmt.Println(err)
+				return err
+			}
 		}
 	}
 
@@ -65,6 +82,7 @@ func Insert(ops *InsertOptions) error {
 		fmt.Println(err)
 		return err
 	}
+
 	return nil
 }
 
@@ -86,13 +104,31 @@ func PathExists(path string) (bool, error) {
 	return false, nil
 }
 
+func SliceIndex(limit int, predicate func(i int) bool) int {
+	for i := 0; i < limit; i++ {
+		if predicate(i) {
+			return i
+		}
+	}
+	return -1
+}
+var arr = [...]string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
+	"N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"}
+func toChar(i int) string {
+	return arr[i]
+}
+func getAxisByKeyName(key string, headers []string) string {
+	index := SliceIndex(len(headers), func(i int) bool { return headers[i] == key })
+	return toChar(index)
+}
+
 func findImageByKey(dir string, key string) string {
-	suffixs := []string{".jpg", "jpeg", ".png", "gif"}
-	for _, item := range(suffixs) {
-		fmt.Println(path.Join(dir, key, item))
-		isExist, _ := PathExists(path.Join(dir, key, item))
+	suffixs := []string{".jpg", ".jpeg", ".png", ".gif"}
+	for _, suffix := range(suffixs) {
+		isExist, _ := PathExists(path.Join(dir, key) + suffix)
 		if isExist {
-			return path.Join(dir, key, item)
+			fmt.Println("found match file: ", path.Join(dir, key), suffix)
+			return path.Join(dir, key) + suffix
 		}
 	}
 	return ""
