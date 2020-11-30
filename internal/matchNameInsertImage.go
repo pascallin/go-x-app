@@ -26,17 +26,13 @@ type InsertOptions struct {
 }
 
 func Insert(ops *InsertOptions) error {
-	fmt.Println(ops)
-
 	xlsx, err := excelize.OpenFile(ops.ExcelFile)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
 	rows, err := xlsx.GetRows(ops.SheetName)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
@@ -59,7 +55,6 @@ func Insert(ops *InsertOptions) error {
 		if imagePath != "" {
 			err = xlsx.AddPicture(ops.SheetName, imageAxis + strconv.Itoa(len(headers)), imagePath , `{"autofit": true}`)
 			if err != nil {
-				fmt.Println(err)
 				return err
 			}
 		}
@@ -117,11 +112,6 @@ var arr = [...]string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"
 func toChar(i int) string {
 	return arr[i]
 }
-func getAxisByKeyName(key string, headers []string) string {
-	index := SliceIndex(len(headers), func(i int) bool { return headers[i] == key })
-	return toChar(index)
-}
-
 func findImageByKey(dir string, key string) string {
 	suffixs := []string{".jpg", ".jpeg", ".png", ".gif"}
 	for _, suffix := range(suffixs) {

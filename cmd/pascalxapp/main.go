@@ -1,15 +1,18 @@
 package main
 
 import (
+	"os"
+	"path"
+
 	"fyne.io/fyne"
 	"fyne.io/fyne/app"
 	"fyne.io/fyne/container"
 	"fyne.io/fyne/layout"
 	"fyne.io/fyne/theme"
 	"fyne.io/fyne/widget"
-	"os"
 
 	"github.com/pascallin/go-x-app/internal/screens"
+
 )
 
 const preferenceCurrentTutorial = "currentTutorial"
@@ -17,7 +20,7 @@ const preferenceCurrentTutorial = "currentTutorial"
 var topWindow fyne.Window
 
 func main() {
-	os.Setenv("FYNE_FONT", "./msyh.ttc")
+	os.Setenv("FYNE_FONT", path.Join("C://Windows/Fonts", "msyh.ttc"))
 
 	a := app.NewWithID("pascal-x-app")
 	a.SetIcon(theme.FyneLogo())
