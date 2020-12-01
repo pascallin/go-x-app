@@ -96,7 +96,7 @@ func makeForm() fyne.CanvasObject {
 		kayColumnName.Disable()
 		//infProgress.Start()
 
-		err := internal.Insert(&internal.InsertOptions{
+		err := internal.InsertImage(&internal.InsertOptions{
 			ExcelFile: xlsxPath,
 			ImageDir: imgDirPath,
 			KeyColumn:kayColumnName.Text,

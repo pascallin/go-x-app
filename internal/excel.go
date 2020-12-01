@@ -25,7 +25,7 @@ type InsertOptions struct {
 	KeyColumn string
 }
 
-func Insert(ops *InsertOptions) error {
+func InsertImage(ops *InsertOptions) error {
 	xlsx, err := excelize.OpenFile(ops.ExcelFile)
 	if err != nil {
 		return err
