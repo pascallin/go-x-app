@@ -55,8 +55,7 @@ func InsertImage(ops *InsertOptions) error {
 		"autofit": true,
 		"locked": true,
 		"print_obj": true,
-		"lock_aspect_ratio": true,	
-		"positioning": "oneCell"
+		"lock_aspect_ratio": true
 	}`
 
 	for row, _ := range rows {

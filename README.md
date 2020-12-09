@@ -11,5 +11,5 @@ go run ./cmd/pascalxapp/main.go
 only support for now because of Chinese Font location using absolute path.
 
 ```shell script
-GOOS=windows go build -x -v -o windows/pascalxapp-v1.exe ./cmd/pascalxapp/main.go
+GOOS=windows go build -x -v -o windows/pascalxapp.exe ./cmd/pascalxapp/main.go
 ```

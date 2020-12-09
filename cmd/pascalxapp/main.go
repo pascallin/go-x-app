@@ -2,16 +2,14 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"path"
-	"runtime"
-
 	"fyne.io/fyne"
 	"fyne.io/fyne/app"
 	"fyne.io/fyne/container"
 	"fyne.io/fyne/layout"
 	"fyne.io/fyne/theme"
 	"fyne.io/fyne/widget"
+	"os"
+	"path"
 
 	"github.com/pascallin/go-x-app/internal/screens"
 )
@@ -21,13 +19,11 @@ const preferenceCurrentTutorial = "currentTutorial"
 var topWindow fyne.Window
 
 func main() {
-	fmt.Println(runtime.GOOS)
-	if runtime.GOOS == "windows" {
-		os.Setenv("FYNE_FONT", path.Join("C://Windows/Fonts", "msyh.ttc"))
-	}
-	if runtime.GOOS == "darwin" {
-		os.Setenv("FYNE_FONT", path.Join("/System/Library/Fonts", "PingFang.ttc"))
-	}
+	fmt.Println("why fxxk")
+
+	os.Setenv("FYNE_FONT", path.Join("C://Windows/Fonts", "msyh.ttc"))
+
+	fmt.Println("why fxxk")
 
 	a := app.NewWithID("pascal-x-app-v1")
 	a.SetIcon(theme.FyneLogo())
@@ -69,6 +65,7 @@ func main() {
 		w.SetContent(split)
 	}
 	w.Resize(fyne.NewSize(720, 480))
+	fmt.Println("fxxk")
 	w.ShowAndRun()
 }
 
