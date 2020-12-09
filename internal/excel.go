@@ -23,6 +23,7 @@ type InsertOptions struct {
 	SheetName string
 	ImageDir string
 	KeyColumn string
+	SelectColumn string
 }
 
 func InsertImage(ops *InsertOptions) error {
@@ -37,15 +38,28 @@ func InsertImage(ops *InsertOptions) error {
 	}
 
 	headers := rows[0]
-	index := SliceIndex(len(headers), func(i int) bool { return headers[i] == ops.KeyColumn })
-	if index == -1 {
-		return errors.New("could not found key")
+	// get key axis
+	keyIndex := SliceIndex(len(headers), func(i int) bool { return headers[i] == ops.KeyColumn })
+	if keyIndex == -1 {
+		return errors.New("could not found key column")
 	}
-	axis := toChar(index)
-	imageAxis := toChar(len(headers))
+	keyAxis := toChar(keyIndex)
+	// get image axis
+	imageIndex := SliceIndex(len(headers), func(i int) bool { return headers[i] == ops.SelectColumn })
+	if imageIndex == -1 {
+		return errors.New("could not found image column")
+	}
+	imageAxis := toChar(imageIndex)
 
-	for i, _ := range rows {
-		cell, err := xlsx.GetCellValue(ops.SheetName, axis + strconv.Itoa(i+1))
+	imageFormat := `{
+		"autofit": true,
+		"locked": true,
+		"print_obj": true,
+		"lock_aspect_ratio": true
+	}`
+
+	for row, _ := range rows {
+		cell, err := xlsx.GetCellValue(ops.SheetName, keyAxis + strconv.Itoa(row+1))
 		if err != nil {
 			return err
 		}
@@ -53,7 +67,7 @@ func InsertImage(ops *InsertOptions) error {
 		// Insert a picture.
 		// NOTE: autofit not working
 		if imagePath != "" {
-			err = xlsx.AddPicture(ops.SheetName, imageAxis + strconv.Itoa(len(headers)), imagePath , `{"autofit": true}`)
+			err = xlsx.AddPicture(ops.SheetName, imageAxis + strconv.Itoa(row+1), imagePath, imageFormat)
 			if err != nil {
 				return err
 			}

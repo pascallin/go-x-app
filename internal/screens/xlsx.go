@@ -77,13 +77,17 @@ func makeForm() fyne.CanvasObject {
 	sheetNameFormItem := widget.NewEntry()
 	sheetNameFormItem.SetPlaceHolder("请输入表格名称")
 
-	kayColumnName := widget.NewEntry()
-	kayColumnName.SetPlaceHolder("请输入excel列名")
+	keyColumnName := widget.NewEntry()
+	keyColumnName.SetPlaceHolder("请输入匹配列头名称")
+
+	selectColumnName := widget.NewEntry()
+	selectColumnName.SetPlaceHolder("请输入需要插入图片的列头名称")
 
 	form := &widget.Form{
 		Items: []*widget.FormItem{
 			{Text: "Sheet名称", Widget: sheetNameFormItem},
-			{Text: "需要匹配的列名", Widget: kayColumnName},
+			{Text: "匹配关键字列的列头名称", Widget: keyColumnName},
+			{Text: "匹配插入列的列头名称", Widget: selectColumnName},
 		},
 		SubmitText: "执行",
 	}
@@ -93,14 +97,16 @@ func makeForm() fyne.CanvasObject {
 
 		resultLabel.Text = "进行中...."
 		sheetNameFormItem.Disable()
-		kayColumnName.Disable()
+		keyColumnName.Disable()
+		selectColumnName.Disable()
 		//infProgress.Start()
 
 		err := internal.InsertImage(&internal.InsertOptions{
 			ExcelFile: xlsxPath,
 			ImageDir: imgDirPath,
-			KeyColumn:kayColumnName.Text,
-			SheetName:sheetNameFormItem.Text},
+			KeyColumn: keyColumnName.Text,
+			SelectColumn: selectColumnName.Text,
+			SheetName: sheetNameFormItem.Text},
 		)
 		if err != nil {
 			fyne.LogError("Execution Faild", err)
@@ -112,7 +118,8 @@ func makeForm() fyne.CanvasObject {
 
 		resultLabel.Text = "已完成"
 		sheetNameFormItem.Enable()
-		kayColumnName.Enable()
+		keyColumnName.Enable()
+		selectColumnName.Enable()
 		//infProgress.Stop()
 	}
 
