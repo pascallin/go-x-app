@@ -102,6 +102,8 @@ func makeForm() fyne.CanvasObject {
 	}
 
 	ep := internal.NewExcelProgress()
+	go listenProgress(ep, progressBar)
+
 	form.OnSubmit = func() {
 		fmt.Println("Form submitted")
 
@@ -112,8 +114,6 @@ func makeForm() fyne.CanvasObject {
 		radio.Disable()
 		progressBar.Show()
 		progressBar.SetValue(0)
-
-		go listenProgress(ep, progressBar)
 
 		err := ep.InsertImage(&internal.InsertOptions{
 			ExcelFile: xlsxPath,
