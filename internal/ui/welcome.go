@@ -1,4 +1,4 @@
-package screens
+package ui
 
 import (
 	"net/url"
