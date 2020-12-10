@@ -35,7 +35,7 @@ type ExcelProgress struct {
 }
 
 func NewExcelProgress() *ExcelProgress {
-	return &ExcelProgress{}
+	return &ExcelProgress{ ProgressChannel: make(chan float64)}
 }
 
 func (ep *ExcelProgress) InsertImage(ops *InsertOptions) error {
@@ -77,8 +77,6 @@ func (ep *ExcelProgress) InsertImage(ops *InsertOptions) error {
 		"autofit": true
 	}`
 
-	ep.ProgressChannel = make(chan float64)
-	//defer close(ep.ProgressChannel)
 	for row, _ := range rows {
 		cell, err := xlsx.GetCellValue(ops.SheetName, keyAxis + strconv.Itoa(row+1))
 		if err != nil {

@@ -101,6 +101,7 @@ func makeForm() fyne.CanvasObject {
 		SubmitText: "执行",
 	}
 
+	ep := internal.NewExcelProgress()
 	form.OnSubmit = func() {
 		fmt.Println("Form submitted")
 
@@ -112,7 +113,8 @@ func makeForm() fyne.CanvasObject {
 		progressBar.Show()
 		progressBar.SetValue(0)
 
-		ep := internal.NewExcelProgress()
+		go listenProgress(ep, progressBar)
+
 		err := ep.InsertImage(&internal.InsertOptions{
 			ExcelFile: xlsxPath,
 			ImageDir: imgDirPath,
@@ -121,8 +123,6 @@ func makeForm() fyne.CanvasObject {
 			SheetName: sheetNameFormItem.Text,
 			IsCoverFile: isCoverFile,
 		})
-
-		go listenProgress(ep, progressBar)
 
 		if err != nil {
 			fyne.LogError("Execution Faild", err)
@@ -133,6 +133,7 @@ func makeForm() fyne.CanvasObject {
 		}
 
 		resultLabel.Text = "已完成，保存文件路径：" + ep.NewFilePath
+
 		sheetNameFormItem.Enable()
 		keyColumnName.Enable()
 		selectColumnName.Enable()
