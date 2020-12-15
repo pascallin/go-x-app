@@ -1,4 +1,4 @@
-package screens
+package ui
 
 import (
 	"fmt"
@@ -17,16 +17,15 @@ var (
 	imgDirPath string
 	xlsxPath string
 
-	infProgress *widget.ProgressBarInfinite
+	progressBar *widget.ProgressBar
 	resultLabel *widget.Label
 	paramsCard *widget.Card
 )
 
 func xlsxScreen(win fyne.Window) fyne.CanvasObject {
-	infProgress = widget.NewProgressBarInfinite()
+	progressBar = widget.NewProgressBar()
+	progressBar.SetValue(0)
 	resultLabel = widget.NewLabel("准备中")
-	// NOTE: to soon for execution
-	infProgress.Hide()
 	paramsCard := widget.NewCard("获取到的参数", "", widget.NewLabel(fmt.Sprintf("图片文件夹地址: %s\nExcel文件地址: %s\n", imgDirPath, xlsxPath)))
 
 	return container.NewVScroll(container.NewVBox(
@@ -39,14 +38,6 @@ func xlsxScreen(win fyne.Window) fyne.CanvasObject {
 				if list == nil {
 					return
 				}
-
-				//children, err := list.List()
-				//if err != nil {
-				//	dialog.ShowError(err, win)
-				//	return
-				//}
-				//out := fmt.Sprintf("Folder %s (%d children):\n%s", list.Name(), len(children), list.String())
-				//dialog.ShowInformation("Folder Open", out, win)
 				imgDirPath = strings.TrimPrefix(list.String(), "file://")
 				paramsCard.SetContent(widget.NewLabel(fmt.Sprintf("pictures folder: %s\nxlsx file path: %s\n", imgDirPath, xlsxPath)))
 			}, win)
@@ -67,30 +58,51 @@ func xlsxScreen(win fyne.Window) fyne.CanvasObject {
 			fd.Show()
 		}),
 		makeForm(),
-		infProgress, // NOTE: not showing
 		paramsCard,
 		resultLabel,
+		progressBar,
 	))
 }
 
 func makeForm() fyne.CanvasObject {
 	sheetNameFormItem := widget.NewEntry()
 	sheetNameFormItem.SetPlaceHolder("请输入表格名称")
+	sheetNameFormItem.SetText("Sheet1")
 
 	keyColumnName := widget.NewEntry()
 	keyColumnName.SetPlaceHolder("请输入匹配列头名称")
+	keyColumnName.SetText("款号")
 
 	selectColumnName := widget.NewEntry()
 	selectColumnName.SetPlaceHolder("请输入需要插入图片的列头名称")
+	selectColumnName.SetText("图片")
+
+	var (
+		isCoverFile = false
+		coverFileText = "覆盖原文件"
+		saveAsText = "另存文件（文件名_XXXX）"
+	)
+	radio := widget.NewRadioGroup([]string{coverFileText, saveAsText}, func(s string) {
+		if s == coverFileText {
+			isCoverFile = true
+		} else {
+			isCoverFile = false
+		}
+	})
+	radio.SetSelected(saveAsText)
 
 	form := &widget.Form{
 		Items: []*widget.FormItem{
 			{Text: "Sheet名称", Widget: sheetNameFormItem},
 			{Text: "匹配关键字列的列头名称", Widget: keyColumnName},
 			{Text: "匹配插入列的列头名称", Widget: selectColumnName},
+			{Text: "文件保存方式", Widget: radio},
 		},
 		SubmitText: "执行",
 	}
+
+	ep := internal.NewExcelProgress()
+	go listenProgress(ep, progressBar)
 
 	form.OnSubmit = func() {
 		fmt.Println("Form submitted")
@@ -99,15 +111,19 @@ func makeForm() fyne.CanvasObject {
 		sheetNameFormItem.Disable()
 		keyColumnName.Disable()
 		selectColumnName.Disable()
-		//infProgress.Start()
+		radio.Disable()
+		progressBar.Show()
+		progressBar.SetValue(0)
 
-		err := internal.InsertImage(&internal.InsertOptions{
+		err := ep.InsertImage(&internal.InsertOptions{
 			ExcelFile: xlsxPath,
 			ImageDir: imgDirPath,
 			KeyColumn: keyColumnName.Text,
 			SelectColumn: selectColumnName.Text,
-			SheetName: sheetNameFormItem.Text},
-		)
+			SheetName: sheetNameFormItem.Text,
+			IsCoverFile: isCoverFile,
+		})
+
 		if err != nil {
 			fyne.LogError("Execution Faild", err)
 		}
@@ -116,12 +132,22 @@ func makeForm() fyne.CanvasObject {
 			fyne.LogError("Failed close reader", err)
 		}
 
-		resultLabel.Text = "已完成"
+		resultLabel.Text = "已完成，保存文件路径：" + ep.NewFilePath
+
 		sheetNameFormItem.Enable()
 		keyColumnName.Enable()
 		selectColumnName.Enable()
-		//infProgress.Stop()
+		radio.Enable()
 	}
 
 	return form
+}
+
+func listenProgress(ep *internal.ExcelProgress, bar *widget.ProgressBar) {
+	for {
+		select {
+			case progress := <-ep.ProgressChannel:
+			bar.SetValue(progress)
+		}
+	}
 }

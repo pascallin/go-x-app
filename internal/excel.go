@@ -1,19 +1,21 @@
 package internal
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
-
-	_ "image/gif"
-	_ "image/jpeg"
-	_ "image/png"
+	"time"
 
 	"github.com/360EntSecGroup-Skylar/excelize/v2"
 )
@@ -24,9 +26,23 @@ type InsertOptions struct {
 	ImageDir string
 	KeyColumn string
 	SelectColumn string
+	IsCoverFile bool
 }
 
-func InsertImage(ops *InsertOptions) error {
+type ExcelProgress struct {
+	ProgressChannel chan float64
+	NewFilePath string
+}
+
+func NewExcelProgress() *ExcelProgress {
+	return &ExcelProgress{ ProgressChannel: make(chan float64)}
+}
+
+func (ep *ExcelProgress) InsertImage(ops *InsertOptions) error {
+	if !ops.IsCoverFile {
+		rand.Seed(time.Now().Unix())
+	}
+
 	xlsx, err := excelize.OpenFile(ops.ExcelFile)
 	if err != nil {
 		return err
@@ -51,11 +67,14 @@ func InsertImage(ops *InsertOptions) error {
 	}
 	imageAxis := toChar(imageIndex)
 
+	//imageFormat := `{
+	//	"autofit": true,
+	//	"locked": true,
+	//	"print_obj": true,
+	//	"lock_aspect_ratio": true
+	//}`
 	imageFormat := `{
-		"autofit": true,
-		"locked": true,
-		"print_obj": true,
-		"lock_aspect_ratio": true
+		"autofit": true
 	}`
 
 	for row, _ := range rows {
@@ -65,28 +84,46 @@ func InsertImage(ops *InsertOptions) error {
 		}
 		imagePath := findImageByKey(ops.ImageDir, cell)
 		// Insert a picture.
-		// NOTE: autofit not working
 		if imagePath != "" {
+			// Set cell width and height
+			//err = xlsx.SetRowHeight(ops.SheetName, 2, float64(imagesRecords[0].Height))
+			//if err != nil {
+			//	fmt.Println(err)
+			//	return err
+			//}
+			//err = xlsx.SetColWidth(ops.SheetName, "B", "C", float64(imagesRecords[0].Width))
+			//if err != nil {
+			//	fmt.Println(err)
+			//	return err
+			//}
+
+			//err = xlsx.AddPicture(ops.SheetName, imageAxis + strconv.Itoa(row+1), imagePath, imageFormat)
+			//if err != nil {
+			//	return err
+			//}
+
+			//imageColWith, _ := xlsx.GetColWidth(ops.SheetName, imageAxis)
+			//imageWidth, _, err := getImageWidthAndHeight(imagePath)
+			//ratio := imageColWith / float64(imageWidth)
+			//fmt.Println(imageAxis, imageColWith, imageWidth, ratio)
+			//imageFormat := fmt.Sprintf(`{"x_scale":%f,"y_scale":%f}`, ratio, ratio)
+
 			err = xlsx.AddPicture(ops.SheetName, imageAxis + strconv.Itoa(row+1), imagePath, imageFormat)
 			if err != nil {
 				return err
 			}
 		}
+		go func() { ep.ProgressChannel <- float64(row + 1) / float64(len(rows)) }()
 	}
 
-	//err = xlsx.SetRowHeight(ops.SheetName, 2, float64(imagesRecords[0].Height))
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return err
-	//}
-	//err = xlsx.SetColWidth(ops.SheetName, "B", "C", float64(imagesRecords[0].Width))
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return err
-	//}
-
 	// Save the xlsx file with the origin path.
-	err = xlsx.Save()
+	if ops.IsCoverFile {
+		err = xlsx.Save()
+	} else {
+		newFile := fmt.Sprintf("%s_%s.xlsx", strings.TrimSuffix(ops.ExcelFile, ".xlsx"), strconv.Itoa(rand.Intn(10000)))
+		ep.NewFilePath = newFile
+		err = xlsx.SaveAs(newFile)
+	}
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -165,4 +202,13 @@ func scanImages(dirToScan string) []*AppImage {
 		}
 	}
 	return result
+}
+
+func getImageWidthAndHeight(picture string) (int, int, error) {
+	file, _ := ioutil.ReadFile(picture)
+	img, _, err := image.DecodeConfig(bytes.NewReader(file))
+	if err != nil {
+		return 0, 0, err
+	}
+	return img.Width,img.Height, nil
 }
