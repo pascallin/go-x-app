@@ -28,7 +28,7 @@ func main() {
 			panic(err)
 		}
 	} else if runtime.GOOS == "darwin" {
-		err := os.Setenv("FYNE_FONT", path.Join("/System/Library/Fonts", "PingFang.ttf"))
+		err := os.Setenv("FYNE_FONT", path.Join("/System/Library/Fonts", "STHeiti Medium.ttc"))
 		if err != nil {
 			panic(err)
 		}
