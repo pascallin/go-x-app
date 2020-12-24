@@ -20,7 +20,7 @@ go run ./cmd/pascalxapp/main.go
 
 ```shell script
 # win10
-GOOS=windows go build -x -v -o windows/pascalxapp.exe ./cmd/pascalxapp/main.go
+GOOS=windows go build -x -v -o windows/pascalxapp-v1.10.exe ./cmd/pascalxapp/main.go
 
 # MacOS
 GOOS=darwin go build -x -v -o macos/pascalxapp ./cmd/pascalxapp/main.go
