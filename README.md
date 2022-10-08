@@ -12,6 +12,8 @@ For personal usage, but feel free to view and comment, even reuse it.
 
 ## development
 
+Prerequisites: [fyne Getting Started](https://developer.fyne.io/started/#prerequisites)
+
 ```shell script
 go run ./cmd/pascalxapp/main.go
 ```
@@ -24,27 +26,4 @@ GOOS=windows go build -x -v -o windows/pascalxapp-v1.10.exe ./cmd/pascalxapp/mai
 
 # MacOS
 GOOS=darwin go build -x -v -o macos/pascalxapp ./cmd/pascalxapp/main.go
-```
-
-## NOTE
-
-### need to fix package
-
-jump to `github.com/360EntSecGroup-Skylar/excelize/v2` package `picture.go` file, search `drawingResize`, and comment rows `630-633`, target to `autofix` just base on row width
-
-```go
-//if float64(cellHeight) < height {
-//	asp := float64(cellHeight) / height
-//	height, width = float64(cellHeight), width*asp
-//}
-```
-
-jump to `github.com/360EntSecGroup-Skylar/excelize/v2` package `col.go` file and comment rows `608-611`, target to `autofix` just base on row width
-
-```go
-// Subtract the underlying cell heights to find end cell of the object.
-// for height >= f.getRowHeight(sheet, rowEnd) {
-// 	height -= f.getRowHeight(sheet, rowEnd)
-// 	rowEnd++
-// }
 ```

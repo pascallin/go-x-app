@@ -17,25 +17,25 @@ import (
 	"strings"
 	"time"
 
-	"github.com/360EntSecGroup-Skylar/excelize/v2"
+	"github.com/xuri/excelize/v2"
 )
 
 type InsertOptions struct {
-	ExcelFile string
-	SheetName string
-	ImageDir string
-	KeyColumn string
+	ExcelFile    string
+	SheetName    string
+	ImageDir     string
+	KeyColumn    string
 	SelectColumn string
-	IsCoverFile bool
+	IsCoverFile  bool
 }
 
 type ExcelProgress struct {
 	ProgressChannel chan float64
-	NewFilePath string
+	NewFilePath     string
 }
 
 func NewExcelProgress() *ExcelProgress {
-	return &ExcelProgress{ ProgressChannel: make(chan float64)}
+	return &ExcelProgress{ProgressChannel: make(chan float64)}
 }
 
 func (ep *ExcelProgress) InsertImage(ops *InsertOptions) error {
@@ -78,7 +78,7 @@ func (ep *ExcelProgress) InsertImage(ops *InsertOptions) error {
 	}`
 
 	for row, _ := range rows {
-		cell, err := xlsx.GetCellValue(ops.SheetName, keyAxis + strconv.Itoa(row+1))
+		cell, err := xlsx.GetCellValue(ops.SheetName, keyAxis+strconv.Itoa(row+1))
 		if err != nil {
 			return err
 		}
@@ -108,12 +108,12 @@ func (ep *ExcelProgress) InsertImage(ops *InsertOptions) error {
 			//fmt.Println(imageAxis, imageColWith, imageWidth, ratio)
 			//imageFormat := fmt.Sprintf(`{"x_scale":%f,"y_scale":%f}`, ratio, ratio)
 
-			err = xlsx.AddPicture(ops.SheetName, imageAxis + strconv.Itoa(row+1), imagePath, imageFormat)
+			err = xlsx.AddPicture(ops.SheetName, imageAxis+strconv.Itoa(row+1), imagePath, imageFormat)
 			if err != nil {
 				return err
 			}
 		}
-		go func() { ep.ProgressChannel <- float64(row + 1) / float64(len(rows)) }()
+		go func() { ep.ProgressChannel <- float64(row+1) / float64(len(rows)) }()
 	}
 
 	// Save the xlsx file with the origin path.
@@ -133,10 +133,10 @@ func (ep *ExcelProgress) InsertImage(ops *InsertOptions) error {
 }
 
 type AppImage struct {
-	Key string
-	Width int
+	Key    string
+	Width  int
 	Height int
-	Path string
+	Path   string
 }
 
 func PathExists(path string) (bool, error) {
@@ -158,14 +158,16 @@ func SliceIndex(limit int, predicate func(i int) bool) int {
 	}
 	return -1
 }
+
 var arr = [...]string{"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
 	"N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"}
+
 func toChar(i int) string {
 	return arr[i]
 }
 func findImageByKey(dir string, key string) string {
 	suffixs := []string{".jpg", ".jpeg", ".png", ".gif"}
-	for _, suffix := range(suffixs) {
+	for _, suffix := range suffixs {
 		isExist, _ := PathExists(path.Join(dir, key) + suffix)
 		if isExist {
 			fmt.Println("found match file: ", path.Join(dir, key), suffix)
@@ -192,10 +194,10 @@ func scanImages(dirToScan string) []*AppImage {
 			}
 			fmt.Printf("%s %d %d\n", imgFile.Name(), im.Width, im.Height)
 			result = append(result, &AppImage{
-				Width: im.Width,
+				Width:  im.Width,
 				Height: im.Height,
-				Path: path.Join(dirToScan, imgFile.Name()),
-				Key: strings.TrimSuffix(imgFile.Name(), fileExt),
+				Path:   path.Join(dirToScan, imgFile.Name()),
+				Key:    strings.TrimSuffix(imgFile.Name(), fileExt),
 			})
 		} else {
 			fmt.Println("Impossible to open the file:", err)
@@ -210,5 +212,5 @@ func getImageWidthAndHeight(picture string) (int, int, error) {
 	if err != nil {
 		return 0, 0, err
 	}
-	return img.Width,img.Height, nil
+	return img.Width, img.Height, nil
 }
